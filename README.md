@@ -50,6 +50,22 @@ $ {"id":2,"item":"Mow the lawn"}
 $ {"id":3,"item":"Feed the dog"}
 ```
 
+### GET Homepage
+
+**Request**
+```
+curl -X GET http://localhost:9000
+```
+
+**Response**
+```
+TO-DO LIST
+----------
+1. Do the dishes
+2. Mow the lawn
+3. Feed the dog
+```
+
 ### GET Read (requires path parameter)
 
 **Request**
