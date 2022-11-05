@@ -1,9 +1,7 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type ItemList struct {
@@ -13,6 +11,14 @@ type ItemList struct {
 type ItemAndID struct {
 	Item string `json:"item"`
 	ID   int    `json:"ID"`
+}
+
+type RequestBody struct {
+	Item string `json:"item"`
+}
+
+type SingleResponseBody struct {
+	Item ItemAndID `json:"item"`
 }
 
 type ListResponseBody struct {
@@ -25,22 +31,16 @@ func NewItemList() *ItemList {
 	}
 }
 
-func (il *ItemList) ListItems(writer http.ResponseWriter) error {
-	var resp ListResponseBody
+func (il *ItemList) ListItems() []ItemAndID {
+	var items []ItemAndID
 	for i, item := range il.items {
-		resp.Items = append(resp.Items, ItemAndID{
+		items = append(items, ItemAndID{
 			Item: item,
 			ID:   i + 1,
 		})
 	}
 
-	b, err := json.Marshal(resp)
-	if err != nil {
-		return err
-	}
-
-	writer.Write(b)
-	return nil
+	return items
 }
 
 func (il *ItemList) CreateItem(item string) ItemAndID {

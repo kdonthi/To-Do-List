@@ -3,8 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -12,33 +10,48 @@ func TestListItems(t *testing.T) {
 	testTable := []struct {
 		name             string
 		itemList         *ItemList
-		expectedResponse string
+		expectedResponse []ItemAndID
 	}{
 		{
 			name:             "no items",
 			itemList:         NewItemList(),
-			expectedResponse: "",
+			expectedResponse: nil,
 		},
 		{
-			name:             "one item",
-			itemList:         &ItemList{items: []string{"abc"}},
-			expectedResponse: "1. abc\n",
+			name:     "one item",
+			itemList: &ItemList{items: []string{"abc"}},
+			expectedResponse: []ItemAndID{
+				{
+					Item: "abc",
+					ID:   1,
+				},
+			},
 		},
 		{
-			name:             "multiple items",
-			itemList:         &ItemList{items: []string{"abc", "{hello:world}", "123"}},
-			expectedResponse: "1. abc\n2. {hello:world}\n3. 123\n",
+			name:     "multiple items",
+			itemList: &ItemList{items: []string{"abc", "{hello:world}", "123"}},
+			expectedResponse: []ItemAndID{
+				{
+					Item: "abc",
+					ID:   1,
+				},
+				{
+					Item: "{hello:world}",
+					ID:   2,
+				},
+				{
+					Item: "123",
+					ID:   3,
+				},
+			},
 		},
 	}
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			recorder := httptest.NewRecorder()
-			testCase.itemList.ListItems(recorder)
+			items := testCase.itemList.ListItems()
 
-			b, err := io.ReadAll(recorder.Body)
-			assert.Nil(t, err)
-			assert.Equal(t, testCase.expectedResponse, string(b))
+			assert.Equal(t, testCase.expectedResponse, items)
 		})
 	}
 }

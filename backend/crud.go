@@ -10,14 +10,32 @@ import (
 	"strconv"
 )
 
-type RequestBody struct {
-	Item string `json:"item"`
+func PrintItems(itemList *utils.ItemList) httprouter.Handle {
+	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+		items := itemList.ListItems()
+
+		result := ""
+		for _, item := range items {
+			result += fmt.Sprintf("%v. %v\n", item.ID, item.Item)
+		}
+
+		writer.Write([]byte(result))
+	})
 }
 
 func ListItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		itemList.ListItems(writer)
+		items := itemList.ListItems()
+
+		response := utils.ListResponseBody{Items: items}
+		b, err := json.Marshal(response)
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+		}
+
+		writer.Write(b)
 	})
+
 }
 
 func CreateItem(itemList *utils.ItemList) httprouter.Handle {
@@ -26,40 +44,36 @@ func CreateItem(itemList *utils.ItemList) httprouter.Handle {
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		} else {
-			itemAndID := itemList.CreateItem(reqBody.Item)
-			b, _ := json.Marshal(itemAndID)
+			item := itemList.CreateItem(reqBody.Item)
+
+			response := utils.SingleResponseBody{Item: item}
+			b, err := json.Marshal(response)
+			if err != nil {
+				writer.Write([]byte(err.Error()))
+			}
+
 			writer.Write(b)
 		}
 	})
 }
 
-func getRequestBody(request *http.Request) (*RequestBody, error) {
-	b, err := io.ReadAll(request.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var r RequestBody
-	err = json.Unmarshal(b, &r)
-	if err != nil {
-		return nil, err
-	}
-
-	return &r, nil
-}
-
 func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		index, err := getID(ps)
+		id, err := getID(ps)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		itemAndID, err := itemList.ReadItem(index)
+		item, err := itemList.ReadItem(id)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		} else {
-			b, _ := json.Marshal(itemAndID)
+			response := utils.SingleResponseBody{Item: item}
+			b, err := json.Marshal(response)
+			if err != nil {
+				writer.Write([]byte(err.Error()))
+			}
+
 			writer.Write(b)
 		}
 	})
@@ -67,22 +81,27 @@ func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 
 func UpdateItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		index, err := getID(ps)
+		id, err := getID(ps)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		b, err := io.ReadAll(request.Body)
+		reqBody, err := getRequestBody(request)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		itemAndID, err := itemList.UpdateItem(index, string(b))
+		item, err := itemList.UpdateItem(id, reqBody.Item)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		b, _ = json.Marshal(itemAndID)
+		response := utils.SingleResponseBody{Item: item}
+		b, err := json.Marshal(response)
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+		}
+
 		writer.Write(b)
 	})
 }
@@ -94,12 +113,17 @@ func DeleteItem(itemList *utils.ItemList) httprouter.Handle {
 			writer.Write([]byte(err.Error()))
 		}
 
-		itemAndID, err := itemList.DeleteItem(index)
+		item, err := itemList.DeleteItem(index)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		b, _ := json.Marshal(itemAndID)
+		response := utils.SingleResponseBody{Item: item}
+		b, err := json.Marshal(response)
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+		}
+
 		writer.Write(b)
 	})
 }
@@ -116,4 +140,19 @@ func getID(ps httprouter.Params) (int, error) {
 	}
 
 	return index, nil
+}
+
+func getRequestBody(request *http.Request) (*utils.RequestBody, error) {
+	b, err := io.ReadAll(request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var r utils.RequestBody
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+
+	return &r, nil
 }
