@@ -27,8 +27,10 @@ $ make run
 or 
 
 ```
-$ go run main.go [OPITONAL_PORT] // The port defaults to 9000.
+$ go run main.go [OPITONAL_PORT]
 ```
+
+The port defaults to 9000.
 
 ## Endpoints
 
@@ -74,7 +76,7 @@ $ curl -X GET http://localhost:9000/read -H "Content-Type: application/json" && 
 $ [{"id":1,"item":"Do the dishes"},{"id":2,"item":"Mow the lawn"}]
 ```
 
-### PUT Update
+### PUT Update (requires path parameter)
 
 **Request**
 ```
@@ -86,7 +88,7 @@ $ curl -X PUT http://localhost:9000/update/1 -H "Content-Type: application/json"
 $ {"id":1,"item":"Wipe the windows"}
 ```
 
-### DELETE Delete
+### DELETE Delete (requires path parameter)
 
 **Request**
 ```
