@@ -13,18 +13,6 @@ type ItemAndID struct {
 	Item string `json:"item"`
 }
 
-type RequestBody struct {
-	Item string `json:"item"`
-}
-
-type SingleResponseBody struct {
-	Item ItemAndID
-}
-
-type ListResponseBody struct {
-	Items []ItemAndID `json:"items"`
-}
-
 func NewItemList() *ItemList {
 	return &ItemList{
 		items: []string{},
@@ -32,15 +20,7 @@ func NewItemList() *ItemList {
 }
 
 func (il *ItemList) ListItems() []ItemAndID {
-	items := []ItemAndID{}
-	for i, item := range il.items {
-		items = append(items, ItemAndID{
-			Item: item,
-			ID:   i + 1,
-		})
-	}
-
-	return items
+	return itemsWithID(il.items)
 }
 
 func (il *ItemList) CreateItem(item string) ItemAndID {
@@ -66,12 +46,11 @@ func (il *ItemList) ReadItem(index int) (ItemAndID, error) {
 }
 
 func (il *ItemList) DeleteItem(index int) (ItemAndID, error) {
-	err := il.validateIndex(index)
+	adjustedIndex, err := il.validateIndex(index)
 	if err != nil {
 		return ItemAndID{}, err
 	}
 
-	adjustedIndex := index - 1
 	itemToDelete := il.items[adjustedIndex]
 	il.items = append(il.items[:adjustedIndex], il.items[adjustedIndex+1:]...)
 
@@ -82,12 +61,11 @@ func (il *ItemList) DeleteItem(index int) (ItemAndID, error) {
 }
 
 func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
-	err := il.validateIndex(index)
+	adjustedIndex, err := il.validateIndex(index)
 	if err != nil {
 		return ItemAndID{}, err
 	}
 
-	adjustedIndex := index - 1
 	il.items[adjustedIndex] = newItem
 
 	return ItemAndID{
@@ -103,4 +81,16 @@ func (il *ItemList) validateIndex(index int) error {
 		return fmt.Errorf("id (%v) is more than the number of items (%v)", index, len(il.items))
 	}
 	return nil
+}
+
+func itemsWithID(listCpy []string) []ItemAndID {
+	var items []ItemAndID
+	for i, item := range listCpy {
+		items = append(items, ItemAndID{
+			ID:   i + 1,
+			Item: item,
+		})
+	}
+
+	return items
 }

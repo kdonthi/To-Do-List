@@ -89,10 +89,10 @@ func TestCreateItem(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			itemAndID := testCase.itemList.CreateItem(testCase.itemToAdd)
+			item := testCase.itemList.CreateItem(testCase.itemToAdd)
 
 			assert.Equal(t, testCase.expectedItemList, testCase.itemList)
-			assert.Equal(t, testCase.expectedResponse, itemAndID)
+			assert.Equal(t, testCase.expectedResponse, item)
 		})
 	}
 }
@@ -207,11 +207,11 @@ func TestUpdateItem(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			itemAndID, err := testCase.itemList.UpdateItem(testCase.index, testCase.update)
+			item, err := testCase.itemList.UpdateItem(testCase.index, testCase.update)
 
 			assert.Equal(t, testCase.expectedError, err)
 			assert.Equal(t, testCase.expectedItemList, testCase.itemList)
-			assert.Equal(t, testCase.expectedResponse, itemAndID)
+			assert.Equal(t, testCase.expectedResponse, item)
 		})
 	}
 }
@@ -278,11 +278,11 @@ func TestDeleteItem(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			itemAndID, err := testCase.itemList.DeleteItem(testCase.id)
+			item, err := testCase.itemList.DeleteItem(testCase.id)
 
 			assert.Equal(t, testCase.expectedError, err)
 			assert.Equal(t, testCase.expectedItemList, testCase.itemList)
-			assert.Equal(t, testCase.expectedResponse, itemAndID)
+			assert.Equal(t, testCase.expectedResponse, item)
 		})
 	}
 }
