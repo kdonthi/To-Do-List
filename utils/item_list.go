@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -14,17 +15,32 @@ type ItemAndID struct {
 	ID   int    `json:"ID"`
 }
 
+type ListResponseBody struct {
+	Items []ItemAndID `json:"items"`
+}
+
 func NewItemList() *ItemList {
 	return &ItemList{
 		items: []string{},
 	}
 }
 
-func (il *ItemList) ListItems(writer http.ResponseWriter) {
+func (il *ItemList) ListItems(writer http.ResponseWriter) error {
+	var resp ListResponseBody
 	for i, item := range il.items {
-		itemStr := fmt.Sprintf("%v. %v\n", i+1, item)
-		writer.Write([]byte(itemStr))
+		resp.Items = append(resp.Items, ItemAndID{
+			Item: item,
+			ID:   i + 1,
+		})
 	}
+
+	b, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+
+	writer.Write(b)
+	return nil
 }
 
 func (il *ItemList) CreateItem(item string) ItemAndID {

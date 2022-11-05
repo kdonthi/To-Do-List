@@ -10,12 +10,8 @@ import (
 	"strconv"
 )
 
-type requestBody struct {
+type RequestBody struct {
 	Item string `json:"item"`
-}
-
-type responseBody struct {
-	Items []utils.ItemAndID `json:"items"`
 }
 
 func ListItems(itemList *utils.ItemList) httprouter.Handle {
@@ -37,13 +33,13 @@ func CreateItem(itemList *utils.ItemList) httprouter.Handle {
 	})
 }
 
-func getRequestBody(request *http.Request) (*requestBody, error) {
+func getRequestBody(request *http.Request) (*RequestBody, error) {
 	b, err := io.ReadAll(request.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var r requestBody
+	var r RequestBody
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err

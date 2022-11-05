@@ -3,6 +3,7 @@ package backend
 import (
 	"TodoApplication/utils"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
@@ -18,77 +19,118 @@ func TestCrud(t *testing.T) {
 
 	SetHandlers(router, itemList)
 
-	b, err := listItems(router)
-	require.Equal(t, "", string(b))
+	items := listItems(t, router)
+	require.Equal(t, utils.ListResponseBody{}, items)
 
-	b, err = createItem(t, router, "abc")
-	require.Nil(t, err)
-	require.Equal(t, "abc", string(b))
+	item := createItem(t, router, "abc")
+	require.Equal(t, utils.ItemAndID{
+		Item: "abc",
+		ID:   1,
+	}, item)
 
-	b, err = readItem(router, 1)
-	require.Nil(t, err)
-	require.Equal(t, "abc", string(b))
+	item = readItem(t, router, 1)
+	require.Equal(t, utils.ItemAndID{
+		Item: "abc",
+		ID:   1,
+	}, item)
 
-	b, err = updateItem(router, 1, "123")
-	require.Nil(t, err)
-	require.Equal(t, "123", string(b))
+	item = updateItem(t, router, 1, "123")
+	require.Equal(t, utils.ItemAndID{
+		Item: "123",
+		ID:   1,
+	}, item)
 
-	b, err = listItems(router)
-	require.Equal(t, "1. 123\n", string(b))
+	items = listItems(t, router)
+	require.Equal(t, utils.ListResponseBody{Items: []utils.ItemAndID{
+		{
+			Item: "123",
+			ID:   1,
+		},
+	}}, items)
 
-	b, err = deleteItem(router, 1)
-	require.Nil(t, err)
-	require.Equal(t, "123", string(b))
+	item = deleteItem(t, router, 1)
+	require.Equal(t, utils.ItemAndID{
+		Item: "123",
+		ID:   1,
+	}, item)
 }
 
-//func TestValidIndex(t *testing.T) {
-//	itemList := utils.NewItemList()
-//	handle := CreateItem(itemList)
-//}
-
-func listItems(router *httprouter.Router) ([]byte, error) {
+func listItems(t *testing.T, router *httprouter.Router) utils.ListResponseBody {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 
 	router.ServeHTTP(w, req)
 
-	return io.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp utils.ListResponseBody
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
 }
 
-func createItem(t *testing.T, router *httprouter.Router, item string) ([]byte, error) {
+func createItem(t *testing.T, router *httprouter.Router, item string) utils.ItemAndID {
 	w := httptest.NewRecorder()
-	reqBody := bytes.NewBuffer([]byte(item))
-	req, _ := http.NewRequest(http.MethodPost, "/create", reqBody)
+	req, _ := http.NewRequest(http.MethodPost, "/create", reqBody(item))
 
 	router.ServeHTTP(w, req)
 
-	return io.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp utils.ItemAndID
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
 }
 
-func readItem(router *httprouter.Router, id int) ([]byte, error) {
+func readItem(t *testing.T, router *httprouter.Router, id int) utils.ItemAndID {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/read/%v", id), nil)
 
 	router.ServeHTTP(w, req)
 
-	return io.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp utils.ItemAndID
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
 }
 
-func updateItem(router *httprouter.Router, id int, newItem string) ([]byte, error) {
+func updateItem(t *testing.T, router *httprouter.Router, id int, newItem string) utils.ItemAndID {
 	w := httptest.NewRecorder()
-	reqBody := bytes.NewBuffer([]byte(newItem))
-	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/update/%v", id), reqBody)
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/update/%v", id), reqBody(newItem))
 
 	router.ServeHTTP(w, req)
 
-	return io.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp utils.ItemAndID
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
 }
 
-func deleteItem(router *httprouter.Router, id int) ([]byte, error) {
+func deleteItem(t *testing.T, router *httprouter.Router, id int) utils.ItemAndID {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/delete/%v", id), nil)
 
 	router.ServeHTTP(w, req)
 
-	return io.ReadAll(w.Body)
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp utils.ItemAndID
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
+}
+
+func reqBody(item string) *bytes.Buffer {
+	b, _ := json.Marshal(RequestBody{Item: item})
+	return bytes.NewBuffer(b)
 }
