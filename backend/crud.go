@@ -14,9 +14,14 @@ func PrintItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		items := itemList.ListItems()
 
-		result := ""
+		result := "TO-DO LIST\n" +
+			"----------\n"
+
 		for _, item := range items {
 			result += fmt.Sprintf("%v. %v\n", item.ID, item.Item)
+		}
+		if len(items) == 0 {
+			result += "Looking kind of empty...\n"
 		}
 
 		writer.Write([]byte(result))
@@ -27,10 +32,10 @@ func ListItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		items := itemList.ListItems()
 
-		response := utils.ListResponseBody{Items: items}
-		b, err := json.Marshal(response)
+		b, err := json.Marshal(items)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		writer.Write(b)
@@ -43,13 +48,14 @@ func CreateItem(itemList *utils.ItemList) httprouter.Handle {
 		reqBody, err := getRequestBody(request)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		} else {
 			item := itemList.CreateItem(reqBody.Item)
 
-			response := utils.SingleResponseBody{Item: item}
-			b, err := json.Marshal(response)
+			b, err := json.Marshal(item)
 			if err != nil {
 				writer.Write([]byte(err.Error()))
+				return
 			}
 
 			writer.Write(b)
@@ -62,16 +68,18 @@ func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 		id, err := getID(ps)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		item, err := itemList.ReadItem(id)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		} else {
-			response := utils.SingleResponseBody{Item: item}
-			b, err := json.Marshal(response)
+			b, err := json.Marshal(item)
 			if err != nil {
 				writer.Write([]byte(err.Error()))
+				return
 			}
 
 			writer.Write(b)
@@ -84,22 +92,25 @@ func UpdateItem(itemList *utils.ItemList) httprouter.Handle {
 		id, err := getID(ps)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		reqBody, err := getRequestBody(request)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		item, err := itemList.UpdateItem(id, reqBody.Item)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
-		response := utils.SingleResponseBody{Item: item}
-		b, err := json.Marshal(response)
+		b, err := json.Marshal(item)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		writer.Write(b)
@@ -111,17 +122,19 @@ func DeleteItem(itemList *utils.ItemList) httprouter.Handle {
 		index, err := getID(ps)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		item, err := itemList.DeleteItem(index)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
-		response := utils.SingleResponseBody{Item: item}
-		b, err := json.Marshal(response)
+		b, err := json.Marshal(item)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
+			return
 		}
 
 		writer.Write(b)

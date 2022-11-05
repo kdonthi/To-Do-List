@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -13,62 +14,167 @@ import (
 	"testing"
 )
 
-func TestCrud(t *testing.T) {
+func setup() *httprouter.Router {
 	router := httprouter.New()
 	itemList := utils.NewItemList()
-
 	SetHandlers(router, itemList)
+	return router
+}
+
+func TestCrud(t *testing.T) {
+	router := setup()
 
 	itemsStr := printItems(t, router)
-	require.Equal(t, "", itemsStr)
+	require.Equal(t, "TO-DO LIST\n----------\nLooking kind of empty...\n", itemsStr)
 
 	items := listItems(t, router)
-	require.Equal(t, utils.ListResponseBody{}, items)
+	require.Equal(t, []utils.ItemAndID{}, items)
 
 	item := createItem(t, router, "abc")
-	require.Equal(t, utils.SingleResponseBody{
-		Item: utils.ItemAndID{
-			Item: "abc",
-			ID:   1,
-		},
+	require.Equal(t, utils.ItemAndID{
+		Item: "abc",
+		ID:   1,
 	}, item)
 
-	item = readItem(t, router, 1)
-	require.Equal(t, utils.SingleResponseBody{
-		Item: utils.ItemAndID{
-			Item: "abc",
-			ID:   1,
-		},
+	item, err := readItem(t, router, 1)
+	require.Nil(t, err)
+	require.Equal(t, utils.ItemAndID{
+		Item: "abc",
+		ID:   1,
 	}, item)
 
-	item = updateItem(t, router, 1, "123")
-	require.Equal(t, utils.SingleResponseBody{
-		Item: utils.ItemAndID{
-			Item: "123",
-			ID:   1,
-		},
+	item, err = updateItem(t, router, 1, "123")
+	require.Nil(t, err)
+	require.Equal(t, utils.ItemAndID{
+		Item: "123",
+		ID:   1,
 	}, item)
 
 	itemsStr = printItems(t, router)
-	require.Equal(t, "1. 123\n", itemsStr)
+	require.Equal(t, "TO-DO LIST\n----------\n1. 123\n", itemsStr)
 
 	items = listItems(t, router)
-	require.Equal(t, utils.ListResponseBody{
-		Items: []utils.ItemAndID{
-			{
-				Item: "123",
-				ID:   1,
-			},
-		},
-	}, items)
-
-	item = deleteItem(t, router, 1)
-	require.Equal(t, utils.SingleResponseBody{
-		Item: utils.ItemAndID{
+	require.Equal(t, []utils.ItemAndID{
+		{
 			Item: "123",
 			ID:   1,
 		},
+	}, items)
+
+	item, err = deleteItem(t, router, 1)
+	require.Nil(t, err)
+	require.Equal(t, utils.ItemAndID{
+		Item: "123",
+		ID:   1,
 	}, item)
+}
+
+func TestReadItem_InvalidID(t *testing.T) {
+	testTable := []struct {
+		name          string
+		id            int
+		expectedError error
+	}{
+		{
+			name:          "valid id",
+			id:            2,
+			expectedError: nil,
+		},
+		{
+			name:          "invalid id below 1",
+			id:            0,
+			expectedError: fmt.Errorf("id is less than 1"),
+		},
+		{
+			name:          "invalid id above size",
+			id:            3,
+			expectedError: fmt.Errorf("id (3) is more than the number of items (2)"),
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			router := setup()
+
+			createItem(t, router, "hello")
+			createItem(t, router, "world")
+
+			_, err := readItem(t, router, testCase.id)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+func TestUpdateItem_InvalidID(t *testing.T) {
+	testTable := []struct {
+		name          string
+		id            int
+		expectedError error
+	}{
+		{
+			name:          "valid id",
+			id:            2,
+			expectedError: nil,
+		},
+		{
+			name:          "invalid id below 1",
+			id:            0,
+			expectedError: fmt.Errorf("id is less than 1"),
+		},
+		{
+			name:          "invalid id above size",
+			id:            3,
+			expectedError: fmt.Errorf("id (3) is more than the number of items (2)"),
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			router := setup()
+
+			createItem(t, router, "hello")
+			createItem(t, router, "world")
+
+			_, err := updateItem(t, router, testCase.id, "abc")
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+func TestDeleteItem_InvalidID(t *testing.T) {
+	testTable := []struct {
+		name          string
+		id            int
+		expectedError error
+	}{
+		{
+			name:          "valid id",
+			id:            2,
+			expectedError: nil,
+		},
+		{
+			name:          "invalid id below 1",
+			id:            0,
+			expectedError: fmt.Errorf("id is less than 1"),
+		},
+		{
+			name:          "invalid id above size",
+			id:            3,
+			expectedError: fmt.Errorf("id (3) is more than the number of items (2)"),
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			router := setup()
+
+			createItem(t, router, "hello")
+			createItem(t, router, "world")
+
+			_, err := deleteItem(t, router, testCase.id)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
 }
 
 func printItems(t *testing.T, router *httprouter.Router) string {
@@ -83,7 +189,7 @@ func printItems(t *testing.T, router *httprouter.Router) string {
 	return string(b)
 }
 
-func listItems(t *testing.T, router *httprouter.Router) utils.ListResponseBody {
+func listItems(t *testing.T, router *httprouter.Router) []utils.ItemAndID {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/read-all", nil)
 
@@ -92,13 +198,13 @@ func listItems(t *testing.T, router *httprouter.Router) utils.ListResponseBody {
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	var resp utils.ListResponseBody
+	var resp []utils.ItemAndID
 	require.Nil(t, json.Unmarshal(b, &resp))
 
 	return resp
 }
 
-func createItem(t *testing.T, router *httprouter.Router, item string) utils.SingleResponseBody {
+func createItem(t *testing.T, router *httprouter.Router, item string) utils.ItemAndID {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/create", reqBody(item))
 
@@ -107,13 +213,13 @@ func createItem(t *testing.T, router *httprouter.Router, item string) utils.Sing
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	var resp utils.SingleResponseBody
+	var resp utils.ItemAndID
 	require.Nil(t, json.Unmarshal(b, &resp))
 
 	return resp
 }
 
-func readItem(t *testing.T, router *httprouter.Router, id int) utils.SingleResponseBody {
+func readItem(t *testing.T, router *httprouter.Router, id int) (utils.ItemAndID, error) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/read/%v", id), nil)
 
@@ -122,13 +228,16 @@ func readItem(t *testing.T, router *httprouter.Router, id int) utils.SingleRespo
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	var resp utils.SingleResponseBody
-	require.Nil(t, json.Unmarshal(b, &resp))
+	var resp utils.ItemAndID
+	err = json.Unmarshal(b, &resp)
+	if err != nil {
+		return utils.ItemAndID{}, fmt.Errorf(string(b))
+	}
 
-	return resp
+	return resp, nil
 }
 
-func updateItem(t *testing.T, router *httprouter.Router, id int, newItem string) utils.SingleResponseBody {
+func updateItem(t *testing.T, router *httprouter.Router, id int, newItem string) (utils.ItemAndID, error) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/update/%v", id), reqBody(newItem))
 
@@ -137,13 +246,16 @@ func updateItem(t *testing.T, router *httprouter.Router, id int, newItem string)
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	var resp utils.SingleResponseBody
-	require.Nil(t, json.Unmarshal(b, &resp))
+	var resp utils.ItemAndID
+	err = json.Unmarshal(b, &resp)
+	if err != nil {
+		return utils.ItemAndID{}, fmt.Errorf(string(b))
+	}
 
-	return resp
+	return resp, nil
 }
 
-func deleteItem(t *testing.T, router *httprouter.Router, id int) utils.SingleResponseBody {
+func deleteItem(t *testing.T, router *httprouter.Router, id int) (utils.ItemAndID, error) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/delete/%v", id), nil)
 
@@ -152,10 +264,13 @@ func deleteItem(t *testing.T, router *httprouter.Router, id int) utils.SingleRes
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	var resp utils.SingleResponseBody
-	require.Nil(t, json.Unmarshal(b, &resp))
+	var resp utils.ItemAndID
+	err = json.Unmarshal(b, &resp)
+	if err != nil {
+		return utils.ItemAndID{}, fmt.Errorf(string(b))
+	}
 
-	return resp
+	return resp, nil
 }
 
 func reqBody(item string) *bytes.Buffer {
