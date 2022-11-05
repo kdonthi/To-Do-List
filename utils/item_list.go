@@ -1,13 +1,17 @@
 package utils
 
 import (
-	"TodoApplication/backend"
 	"fmt"
 	"net/http"
 )
 
 type ItemList struct {
 	items []string
+}
+
+type ItemAndID struct {
+	Item string `json:"item"`
+	ID   int    `json:"ID"`
 }
 
 func NewItemList() *ItemList {
@@ -23,54 +27,54 @@ func (il *ItemList) ListItems(writer http.ResponseWriter) {
 	}
 }
 
-func (il *ItemList) CreateItem(item string) backend.ItemAndID {
+func (il *ItemList) CreateItem(item string) ItemAndID {
 	il.items = append(il.items, item)
 
-	return backend.ItemAndID{
+	return ItemAndID{
 		Item: item,
 		ID:   len(il.items),
 	}
 }
 
-func (il *ItemList) ReadItem(index int) (backend.ItemAndID, error) {
+func (il *ItemList) ReadItem(index int) (ItemAndID, error) {
 	err := il.validateIndex(index)
 	if err != nil {
-		return backend.ItemAndID{}, err
+		return ItemAndID{}, err
 	}
 
 	adjustedIndex := index - 1
-	return backend.ItemAndID{
+	return ItemAndID{
 		Item: il.items[adjustedIndex],
 		ID:   index,
 	}, nil
 }
 
-func (il *ItemList) DeleteItem(index int) (backend.ItemAndID, error) {
+func (il *ItemList) DeleteItem(index int) (ItemAndID, error) {
 	err := il.validateIndex(index)
 	if err != nil {
-		return backend.ItemAndID{}, err
+		return ItemAndID{}, err
 	}
 
 	adjustedIndex := index - 1
 	itemToDelete := il.items[adjustedIndex]
 	il.items = append(il.items[:adjustedIndex], il.items[adjustedIndex+1:]...)
 
-	return backend.ItemAndID{
+	return ItemAndID{
 		Item: itemToDelete,
 		ID:   index,
 	}, nil
 }
 
-func (il *ItemList) UpdateItem(index int, newItem string) (backend.ItemAndID, error) {
+func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
 	err := il.validateIndex(index)
 	if err != nil {
-		return backend.ItemAndID{}, err
+		return ItemAndID{}, err
 	}
 
 	adjustedIndex := index - 1
 	il.items[adjustedIndex] = newItem
 
-	return backend.ItemAndID{
+	return ItemAndID{
 		Item: newItem,
 		ID:   index,
 	}, nil

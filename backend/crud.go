@@ -15,12 +15,7 @@ type requestBody struct {
 }
 
 type responseBody struct {
-	Items []ItemAndID `json:"items"`
-}
-
-type ItemAndID struct {
-	Item string `json:"item"`
-	ID   int    `json:"ID"`
+	Items []utils.ItemAndID `json:"items"`
 }
 
 func ListItems(itemList *utils.ItemList) httprouter.Handle {
@@ -35,8 +30,9 @@ func CreateItem(itemList *utils.ItemList) httprouter.Handle {
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		} else {
-			itemList.CreateItem(reqBody.Item)
-			writer.Write(responseBody{item: b})
+			itemAndID := itemList.CreateItem(reqBody.Item)
+			b, _ := json.Marshal(itemAndID)
+			writer.Write(b)
 		}
 	})
 }
@@ -63,15 +59,11 @@ func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 			writer.Write([]byte(err.Error()))
 		}
 
-		item, err := itemList.ReadItem(index)
+		itemAndID, err := itemList.ReadItem(index)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		} else {
-			b, err := json.Marshal(item)
-			if err != nil {
-				writer.Write([]byte(err.Error()))
-			}
-
+			b, _ := json.Marshal(itemAndID)
 			writer.Write(b)
 		}
 	})
@@ -89,11 +81,12 @@ func UpdateItem(itemList *utils.ItemList) httprouter.Handle {
 			writer.Write([]byte(err.Error()))
 		}
 
-		err = itemList.UpdateItem(index, b)
+		itemAndID, err := itemList.UpdateItem(index, string(b))
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
+		b, _ = json.Marshal(itemAndID)
 		writer.Write(b)
 	})
 }
@@ -105,12 +98,13 @@ func DeleteItem(itemList *utils.ItemList) httprouter.Handle {
 			writer.Write([]byte(err.Error()))
 		}
 
-		deletedItem, err := itemList.DeleteItem(index)
+		itemAndID, err := itemList.DeleteItem(index)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 		}
 
-		writer.Write([]byte(deletedItem))
+		b, _ := json.Marshal(itemAndID)
+		writer.Write(b)
 	})
 }
 
