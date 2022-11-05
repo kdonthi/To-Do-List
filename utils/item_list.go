@@ -9,8 +9,8 @@ type ItemList struct {
 }
 
 type ItemAndID struct {
+	ID   int    `json:"id"`
 	Item string `json:"item"`
-	ID   int    `json:"ID"`
 }
 
 type RequestBody struct {
@@ -18,7 +18,7 @@ type RequestBody struct {
 }
 
 type SingleResponseBody struct {
-	Item ItemAndID `json:"item"`
+	Item ItemAndID
 }
 
 type ListResponseBody struct {
@@ -32,7 +32,7 @@ func NewItemList() *ItemList {
 }
 
 func (il *ItemList) ListItems() []ItemAndID {
-	var items []ItemAndID
+	items := []ItemAndID{}
 	for i, item := range il.items {
 		items = append(items, ItemAndID{
 			Item: item,
@@ -98,9 +98,9 @@ func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
 
 func (il *ItemList) validateIndex(index int) error {
 	if index < 1 {
-		return fmt.Errorf("item number less than 1")
+		return fmt.Errorf("id is less than 1")
 	} else if index > len(il.items) {
-		return fmt.Errorf("item number (%v) is more than number of items (%v)", index, len(il.items))
+		return fmt.Errorf("id (%v) is more than the number of items (%v)", index, len(il.items))
 	}
 	return nil
 }
