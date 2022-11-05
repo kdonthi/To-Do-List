@@ -15,7 +15,7 @@ func TestListItems(t *testing.T) {
 		{
 			name:             "no items",
 			itemList:         NewItemList(),
-			expectedResponse: nil,
+			expectedResponse: []ItemAndID{},
 		},
 		{
 			name:     "one item",
@@ -110,14 +110,14 @@ func TestReadItem(t *testing.T) {
 			itemList:         &ItemList{items: []string{"abc", "bcd"}},
 			index:            0,
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number less than 1"),
+			expectedError:    fmt.Errorf("id is less than 1"),
 		},
 		{
 			name:             "id is more than length",
 			itemList:         &ItemList{items: []string{"abc", "bcd"}},
 			index:            3,
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number (%v) is more than number of items (%v)", 3, 2),
+			expectedError:    fmt.Errorf("id (%v) is more than the number of items (%v)", 3, 2),
 		},
 		{
 			name:     "id is 1",
@@ -168,7 +168,7 @@ func TestUpdateItem(t *testing.T) {
 			update:           "",
 			expectedItemList: &ItemList{items: []string{"abc", "bcd"}},
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number less than 1"),
+			expectedError:    fmt.Errorf("id is less than 1"),
 		},
 		{
 			name:             "id is more than length",
@@ -177,7 +177,7 @@ func TestUpdateItem(t *testing.T) {
 			update:           "",
 			expectedItemList: &ItemList{items: []string{"abc", "bcd"}},
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number (%v) is more than number of items (%v)", 3, 2),
+			expectedError:    fmt.Errorf("id (%v) is more than the number of items (%v)", 3, 2),
 		},
 		{
 			name:             "id is 1",
@@ -231,7 +231,7 @@ func TestDeleteItem(t *testing.T) {
 			id:               0,
 			expectedItemList: &ItemList{items: []string{"abc", "bcd"}},
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number less than 1"),
+			expectedError:    fmt.Errorf("id is less than 1"),
 		},
 		{
 			name:             "id is more than length",
@@ -239,7 +239,7 @@ func TestDeleteItem(t *testing.T) {
 			id:               3,
 			expectedItemList: &ItemList{items: []string{"abc", "bcd"}},
 			expectedResponse: ItemAndID{},
-			expectedError:    fmt.Errorf("item number (%v) is more than number of items (%v)", 3, 2),
+			expectedError:    fmt.Errorf("id (%v) is more than the number of items (%v)", 3, 2),
 		},
 		{
 			name:             "id is 1",
@@ -298,7 +298,7 @@ func TestDeleteAll(t *testing.T) {
 			name:             "0 items",
 			itemList:         &ItemList{items: []string{}},
 			expectedItemList: &ItemList{items: []string{}},
-			expectedResponse: nil,
+			expectedResponse: []ItemAndID{},
 		},
 		{
 			name:             "2 items",

@@ -89,7 +89,7 @@ func (il *ItemList) validateIndex(index int) (adjustedIndex int, err error) {
 }
 
 func itemsWithID(listCpy []string) []ItemAndID {
-	var items []ItemAndID
+	items := []ItemAndID{}
 	for i, item := range listCpy {
 		items = append(items, ItemAndID{
 			ID:   i + 1,
