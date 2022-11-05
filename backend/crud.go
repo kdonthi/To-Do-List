@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"TodoApplication/rpc"
 	"TodoApplication/utils"
 	"encoding/json"
 	"fmt"
@@ -40,7 +41,6 @@ func ListItems(itemList *utils.ItemList) httprouter.Handle {
 
 		writer.Write(b)
 	})
-
 }
 
 func CreateItem(itemList *utils.ItemList) httprouter.Handle {
@@ -141,6 +141,20 @@ func DeleteItem(itemList *utils.ItemList) httprouter.Handle {
 	})
 }
 
+func DeleteAll(itemList *utils.ItemList) httprouter.Handle {
+	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+		items := itemList.DeleteAll()
+
+		b, err := json.Marshal(items)
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+			return
+		}
+
+		writer.Write(b)
+	})
+}
+
 func getID(ps httprouter.Params) (int, error) {
 	idVar := ps.ByName("id")
 	if idVar == "" {
@@ -155,13 +169,13 @@ func getID(ps httprouter.Params) (int, error) {
 	return index, nil
 }
 
-func getRequestBody(request *http.Request) (*utils.RequestBody, error) {
+func getRequestBody(request *http.Request) (*rpc.RequestBody, error) {
 	b, err := io.ReadAll(request.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var r utils.RequestBody
+	var r rpc.RequestBody
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err

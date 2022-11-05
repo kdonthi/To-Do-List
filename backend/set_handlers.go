@@ -12,4 +12,5 @@ func SetHandlers(router *httprouter.Router, itemList *utils.ItemList) {
 	router.GET("/read-all", ListItems(itemList))
 	router.PUT("/update/:id", UpdateItem(itemList))
 	router.DELETE("/delete/:id", DeleteItem(itemList))
+	router.DELETE("/delete-all", DeleteAll(itemList))
 }

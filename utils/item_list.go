@@ -33,12 +33,11 @@ func (il *ItemList) CreateItem(item string) ItemAndID {
 }
 
 func (il *ItemList) ReadItem(index int) (ItemAndID, error) {
-	err := il.validateIndex(index)
+	adjustedIndex, err := il.validateIndex(index)
 	if err != nil {
 		return ItemAndID{}, err
 	}
 
-	adjustedIndex := index - 1
 	return ItemAndID{
 		Item: il.items[adjustedIndex],
 		ID:   index,
@@ -74,13 +73,19 @@ func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
 	}, nil
 }
 
-func (il *ItemList) validateIndex(index int) error {
+func (il *ItemList) DeleteAll() []ItemAndID {
+	listCpy := il.items
+	il.items = il.items[:0]
+	return itemsWithID(listCpy)
+}
+
+func (il *ItemList) validateIndex(index int) (adjustedIndex int, err error) {
 	if index < 1 {
-		return fmt.Errorf("id is less than 1")
+		return 0, fmt.Errorf("id is less than 1")
 	} else if index > len(il.items) {
-		return fmt.Errorf("id (%v) is more than the number of items (%v)", index, len(il.items))
+		return 0, fmt.Errorf("id (%v) is more than the number of items (%v)", index, len(il.items))
 	}
-	return nil
+	return index - 1, nil
 }
 
 func itemsWithID(listCpy []string) []ItemAndID {

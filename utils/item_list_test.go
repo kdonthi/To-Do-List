@@ -286,3 +286,66 @@ func TestDeleteItem(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteAll(t *testing.T) {
+	testTable := []struct {
+		name             string
+		itemList         *ItemList
+		expectedItemList *ItemList
+		expectedResponse []ItemAndID
+	}{
+		{
+			name:             "0 items",
+			itemList:         &ItemList{items: []string{}},
+			expectedItemList: &ItemList{items: []string{}},
+			expectedResponse: nil,
+		},
+		{
+			name:             "2 items",
+			itemList:         &ItemList{items: []string{"abc", "bcd"}},
+			expectedItemList: &ItemList{items: []string{}},
+			expectedResponse: []ItemAndID{
+				{
+					ID:   1,
+					Item: "abc",
+				},
+				{
+					ID:   2,
+					Item: "bcd",
+				},
+			},
+		},
+		{
+			name:             "4 items",
+			itemList:         &ItemList{items: []string{"abc", "bcd", "cdf", "123"}},
+			expectedItemList: &ItemList{items: []string{}},
+			expectedResponse: []ItemAndID{
+				{
+					ID:   1,
+					Item: "abc",
+				},
+				{
+					ID:   2,
+					Item: "bcd",
+				},
+				{
+					ID:   3,
+					Item: "cdf",
+				},
+				{
+					ID:   4,
+					Item: "123",
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			items := testCase.itemList.DeleteAll()
+
+			assert.Equal(t, testCase.expectedItemList, testCase.itemList)
+			assert.Equal(t, testCase.expectedResponse, items)
+		})
+	}
+}

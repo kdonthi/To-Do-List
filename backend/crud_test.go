@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"TodoApplication/rpc"
 	"TodoApplication/utils"
 	"bytes"
 	"encoding/json"
@@ -67,6 +68,40 @@ func TestCrud(t *testing.T) {
 		Item: "123",
 		ID:   1,
 	}, item)
+}
+
+func TestDeleteAll(t *testing.T) {
+	router := setup()
+
+	item := createItem(t, router, "abc")
+	require.Equal(t, utils.ItemAndID{
+		Item: "abc",
+		ID:   1,
+	}, item)
+
+	item = createItem(t, router, "def")
+	require.Equal(t, utils.ItemAndID{
+		Item: "def",
+		ID:   2,
+	}, item)
+
+	items := listItems(t, router)
+	require.Equal(t, []utils.ItemAndID{
+		{
+			Item: "abc",
+			ID:   1,
+		},
+		{
+			Item: "def",
+			ID:   2,
+		},
+	}, items)
+
+	deleteItems := deleteAll(t, router)
+	require.Equal(t, deleteItems, items)
+
+	items = listItems(t, router)
+	require.Len(t, items, 0)
 }
 
 func TestReadItem_InvalidID(t *testing.T) {
@@ -273,7 +308,22 @@ func deleteItem(t *testing.T, router *httprouter.Router, id int) (utils.ItemAndI
 	return resp, nil
 }
 
+func deleteAll(t *testing.T, router *httprouter.Router) []utils.ItemAndID {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodDelete, "/delete-all", nil)
+
+	router.ServeHTTP(w, req)
+
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	var resp []utils.ItemAndID
+	require.Nil(t, json.Unmarshal(b, &resp))
+
+	return resp
+}
+
 func reqBody(item string) *bytes.Buffer {
-	b, _ := json.Marshal(utils.RequestBody{Item: item})
+	b, _ := json.Marshal(rpc.RequestBody{Item: item})
 	return bytes.NewBuffer(b)
 }
