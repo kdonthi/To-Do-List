@@ -127,4 +127,15 @@ $ curl -X DELETE http://localhost:9000/delete -H "Content-Type: application/json
 ```
 $ [{"id":1,"item":"Wipe the windows"},{"id":2,"item":"Feed the dog"}]
 ```
-  
+
+### GET Count
+
+**Request**
+```
+$ curl -X GET http://localhost:9000/count && echo ""
+```
+
+**Response**
+```
+$ 0
+```
