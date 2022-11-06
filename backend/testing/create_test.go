@@ -34,11 +34,11 @@ func TestCreateItem_InvalidBody(t *testing.T) {
 }
 
 func createItemValidBody(t *testing.T, router *httprouter.Router, item string) (utils.ItemAndID, int, error) {
-	return createItem(t, router, CreateValidRequestBody(item))
+	return createItem(t, router, createValidRequestBody(item))
 }
 
 func createItemInvalidBody(t *testing.T, router *httprouter.Router) (utils.ItemAndID, int, error) {
-	return createItem(t, router, CreateInvalidRequestBody())
+	return createItem(t, router, createInvalidRequestBody())
 }
 
 func createItem(t *testing.T, router *httprouter.Router, body *bytes.Buffer) (utils.ItemAndID, int, error) {

@@ -66,11 +66,11 @@ func TestUpdateItem_InvalidBody(t *testing.T) {
 }
 
 func updateItemValidBody(t *testing.T, router *httprouter.Router, id int, newItem string) (utils.ItemAndID, int, error) {
-	return updateItem(t, router, id, CreateValidRequestBody(newItem))
+	return updateItem(t, router, id, createValidRequestBody(newItem))
 }
 
 func updateItemInvalidBody(t *testing.T, router *httprouter.Router, id int) (utils.ItemAndID, int, error) {
-	return updateItem(t, router, id, CreateInvalidRequestBody())
+	return updateItem(t, router, id, createInvalidRequestBody())
 }
 
 func updateItem(t *testing.T, router *httprouter.Router, id int, body io.Reader) (utils.ItemAndID, int, error) {
