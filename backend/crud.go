@@ -192,7 +192,7 @@ func parseRequestBody(request *http.Request) (*RequestBody, error) {
 	}
 
 	if r.Item == "" {
-		return nil, fmt.Errorf("item field in body was not populated")
+		return nil, fmt.Errorf("\"item\" field in body was not populated")
 	}
 
 	return &r, nil

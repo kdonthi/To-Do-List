@@ -61,7 +61,7 @@ func TestUpdateItem_InvalidBody(t *testing.T) {
 	_, code, err := updateItemInvalidBody(t, router, 1)
 
 	require.NotNil(t, err)
-	assert.Equal(t, "item field in body was not populated", err.Error())
+	assert.Equal(t, "\"item\" field in body was not populated", err.Error())
 	assert.Equal(t, 400, code)
 }
 

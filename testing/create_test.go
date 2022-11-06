@@ -29,7 +29,7 @@ func TestCreateItem_InvalidBody(t *testing.T) {
 
 	_, code, err := createItemInvalidBody(t, router)
 
-	assert.Equal(t, "item field in body was not populated", err.Error())
+	assert.Equal(t, "\"item\" field in body was not populated", err.Error())
 	assert.Equal(t, 400, code)
 }
 
