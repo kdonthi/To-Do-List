@@ -13,7 +13,7 @@ import (
 
 func PrintItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		items := itemList.ListItems()
+		items := itemList.ReadAll()
 
 		result := "TO-DO LIST\n" +
 			"----------\n"
@@ -29,32 +29,18 @@ func PrintItems(itemList *utils.ItemList) httprouter.Handle {
 	})
 }
 
-func ListItems(itemList *utils.ItemList) httprouter.Handle {
-	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		items := itemList.ListItems()
-
-		b, err := json.Marshal(items)
-		if err != nil {
-			writer.Write([]byte(err.Error()))
-			return
-		}
-
-		writer.Write(b)
-	})
-}
-
 func CreateItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
-		reqBody, err := getRequestBody(request)
+		reqBody, err := parseRequestBody(request)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		} else {
 			item := itemList.CreateItem(reqBody.Item)
 
 			b, err := json.Marshal(item)
 			if err != nil {
-				writer.Write([]byte(err.Error()))
+				writeError(writer, err)
 				return
 			}
 
@@ -67,18 +53,18 @@ func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		id, err := getID(ps)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
 		item, err := itemList.ReadItem(id)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		} else {
 			b, err := json.Marshal(item)
 			if err != nil {
-				writer.Write([]byte(err.Error()))
+				writeError(writer, err)
 				return
 			}
 
@@ -87,29 +73,48 @@ func ReadItem(itemList *utils.ItemList) httprouter.Handle {
 	})
 }
 
+func ReadAll(itemList *utils.ItemList) httprouter.Handle {
+	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+		items := itemList.ReadAll()
+
+		b, err := json.Marshal(items)
+		if err != nil {
+			writeError(writer, err)
+			return
+		}
+
+		writer.Write(b)
+	})
+}
+
 func UpdateItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		id, err := getID(ps)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
-		reqBody, err := getRequestBody(request)
+		reqBody, err := parseRequestBody(request)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
+			return
+		}
+
+		if reqBody.Item == "" {
+			writeError(writer, err)
 			return
 		}
 
 		item, err := itemList.UpdateItem(id, reqBody.Item)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
 		b, err := json.Marshal(item)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
@@ -121,19 +126,19 @@ func DeleteItem(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		index, err := getID(ps)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
 		item, err := itemList.DeleteItem(index)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
 		b, err := json.Marshal(item)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
@@ -147,7 +152,7 @@ func DeleteAll(itemList *utils.ItemList) httprouter.Handle {
 
 		b, err := json.Marshal(items)
 		if err != nil {
-			writer.Write([]byte(err.Error()))
+			writeError(writer, err)
 			return
 		}
 
@@ -169,7 +174,7 @@ func getID(ps httprouter.Params) (int, error) {
 	return index, nil
 }
 
-func getRequestBody(request *http.Request) (*rpc.RequestBody, error) {
+func parseRequestBody(request *http.Request) (*rpc.RequestBody, error) {
 	b, err := io.ReadAll(request.Body)
 	if err != nil {
 		return nil, err
@@ -181,5 +186,14 @@ func getRequestBody(request *http.Request) (*rpc.RequestBody, error) {
 		return nil, err
 	}
 
+	if r.Item == "" {
+		return nil, fmt.Errorf("item field in body was not populated")
+	}
+
 	return &r, nil
+}
+
+func writeError(writer http.ResponseWriter, err error) {
+	writer.WriteHeader(http.StatusBadRequest)
+	writer.Write([]byte(err.Error()))
 }

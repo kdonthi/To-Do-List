@@ -6,56 +6,6 @@ import (
 	"testing"
 )
 
-func TestListItems(t *testing.T) {
-	testTable := []struct {
-		name             string
-		itemList         *ItemList
-		expectedResponse []ItemAndID
-	}{
-		{
-			name:             "no items",
-			itemList:         NewItemList(),
-			expectedResponse: []ItemAndID{},
-		},
-		{
-			name:     "one item",
-			itemList: &ItemList{items: []string{"abc"}},
-			expectedResponse: []ItemAndID{
-				{
-					Item: "abc",
-					ID:   1,
-				},
-			},
-		},
-		{
-			name:     "multiple items",
-			itemList: &ItemList{items: []string{"abc", "{hello:world}", "123"}},
-			expectedResponse: []ItemAndID{
-				{
-					Item: "abc",
-					ID:   1,
-				},
-				{
-					Item: "{hello:world}",
-					ID:   2,
-				},
-				{
-					Item: "123",
-					ID:   3,
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testTable {
-		t.Run(testCase.name, func(t *testing.T) {
-			items := testCase.itemList.ListItems()
-
-			assert.Equal(t, testCase.expectedResponse, items)
-		})
-	}
-}
-
 func TestCreateItem(t *testing.T) {
 	testTable := []struct {
 		name             string
@@ -147,6 +97,56 @@ func TestReadItem(t *testing.T) {
 
 			assert.Equal(t, testCase.expectedError, err)
 			assert.Equal(t, testCase.expectedResponse, item)
+		})
+	}
+}
+
+func TestReadAll(t *testing.T) {
+	testTable := []struct {
+		name             string
+		itemList         *ItemList
+		expectedResponse []ItemAndID
+	}{
+		{
+			name:             "no items",
+			itemList:         NewItemList(),
+			expectedResponse: []ItemAndID{},
+		},
+		{
+			name:     "one item",
+			itemList: &ItemList{items: []string{"abc"}},
+			expectedResponse: []ItemAndID{
+				{
+					Item: "abc",
+					ID:   1,
+				},
+			},
+		},
+		{
+			name:     "multiple items",
+			itemList: &ItemList{items: []string{"abc", "{hello:world}", "123"}},
+			expectedResponse: []ItemAndID{
+				{
+					Item: "abc",
+					ID:   1,
+				},
+				{
+					Item: "{hello:world}",
+					ID:   2,
+				},
+				{
+					Item: "123",
+					ID:   3,
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			items := testCase.itemList.ReadAll()
+
+			assert.Equal(t, testCase.expectedResponse, items)
 		})
 	}
 }

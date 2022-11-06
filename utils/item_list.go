@@ -19,10 +19,6 @@ func NewItemList() *ItemList {
 	}
 }
 
-func (il *ItemList) ListItems() []ItemAndID {
-	return itemsWithID(il.items)
-}
-
 func (il *ItemList) CreateItem(item string) ItemAndID {
 	il.items = append(il.items, item)
 
@@ -44,19 +40,8 @@ func (il *ItemList) ReadItem(index int) (ItemAndID, error) {
 	}, nil
 }
 
-func (il *ItemList) DeleteItem(index int) (ItemAndID, error) {
-	adjustedIndex, err := il.validateIndex(index)
-	if err != nil {
-		return ItemAndID{}, err
-	}
-
-	itemToDelete := il.items[adjustedIndex]
-	il.items = append(il.items[:adjustedIndex], il.items[adjustedIndex+1:]...)
-
-	return ItemAndID{
-		Item: itemToDelete,
-		ID:   index,
-	}, nil
+func (il *ItemList) ReadAll() []ItemAndID {
+	return itemsWithID(il.items)
 }
 
 func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
@@ -69,6 +54,21 @@ func (il *ItemList) UpdateItem(index int, newItem string) (ItemAndID, error) {
 
 	return ItemAndID{
 		Item: newItem,
+		ID:   index,
+	}, nil
+}
+
+func (il *ItemList) DeleteItem(index int) (ItemAndID, error) {
+	adjustedIndex, err := il.validateIndex(index)
+	if err != nil {
+		return ItemAndID{}, err
+	}
+
+	itemToDelete := il.items[adjustedIndex]
+	il.items = append(il.items[:adjustedIndex], il.items[adjustedIndex+1:]...)
+
+	return ItemAndID{
+		Item: itemToDelete,
 		ID:   index,
 	}, nil
 }
