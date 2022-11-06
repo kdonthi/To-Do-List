@@ -1,4 +1,4 @@
-# To-Do-List
+# To-Do List
 
 A REST API to manage a to-do list.
 
