@@ -83,6 +83,7 @@ func TestReadItem_IDValidity(t *testing.T) {
 			router, itemList := setup()
 
 			itemList.CreateItem("hello")
+			itemList.CreateItem("world")
 			_, _, err := readItem(t, router, testCase.id)
 
 			assert.Equal(t, testCase.expectedError, err)
