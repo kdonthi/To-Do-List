@@ -218,7 +218,7 @@ func readItems(t *testing.T, router *httprouter.Router) ([]utils.ItemAndID, int)
 
 func count(t *testing.T, router *httprouter.Router) (string, int) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, "/count", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/read", nil)
 
 	router.ServeHTTP(w, req)
 	code := w.Code

@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"TodoApplication/rpc"
 	"TodoApplication/utils"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,10 @@ import (
 	"net/http"
 	"strconv"
 )
+
+type RequestBody struct {
+	Item string `json:"item"`
+}
 
 func PrintItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
@@ -176,13 +179,13 @@ func getID(ps httprouter.Params) (int, error) {
 	return id, nil
 }
 
-func parseRequestBody(request *http.Request) (*rpc.RequestBody, error) {
+func parseRequestBody(request *http.Request) (*RequestBody, error) {
 	b, err := io.ReadAll(request.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	var r rpc.RequestBody
+	var r RequestBody
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
