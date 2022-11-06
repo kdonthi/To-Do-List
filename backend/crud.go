@@ -14,6 +14,10 @@ type RequestBody struct {
 	Item string `json:"item"`
 }
 
+type CountResponse struct {
+	Count int `json:"count"`
+}
+
 func PrintItems(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		items := itemList.ReadAll()
@@ -166,7 +170,15 @@ func DeleteAll(itemList *utils.ItemList) httprouter.Handle {
 func Count(itemList *utils.ItemList) httprouter.Handle {
 	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
 		count := len(itemList.ReadAll())
-		writer.Write([]byte(fmt.Sprintf("%v", count)))
+		response := CountResponse{Count: count}
+
+		b, err := json.Marshal(response)
+		if err != nil {
+			writeError(writer, err)
+			return
+		}
+
+		writer.Write(b)
 	})
 }
 

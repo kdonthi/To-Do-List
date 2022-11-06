@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"TodoApplication/backend"
 	"TodoApplication/utils"
 	"encoding/json"
 	"fmt"
@@ -134,22 +135,22 @@ func TestCount(t *testing.T) {
 	testTable := []struct {
 		name          string
 		values        []string
-		expectedCount string
+		expectedCount backend.CountResponse
 	}{
 		{
 			name:          "no items",
 			values:        []string{},
-			expectedCount: "0",
+			expectedCount: backend.CountResponse{Count: 0},
 		},
 		{
 			name:          "one item",
 			values:        []string{"abc"},
-			expectedCount: "1",
+			expectedCount: backend.CountResponse{Count: 1},
 		},
 		{
 			name:          "multiple items",
 			values:        []string{"abc", "def", "123"},
-			expectedCount: "3",
+			expectedCount: backend.CountResponse{Count: 3},
 		},
 	}
 
@@ -216,7 +217,7 @@ func readItems(t *testing.T, router *httprouter.Router) ([]utils.ItemAndID, int)
 	return resp, code
 }
 
-func count(t *testing.T, router *httprouter.Router) (string, int) {
+func count(t *testing.T, router *httprouter.Router) (backend.CountResponse, int) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/count", nil)
 
@@ -226,5 +227,8 @@ func count(t *testing.T, router *httprouter.Router) (string, int) {
 	b, err := io.ReadAll(w.Body)
 	require.Nil(t, err)
 
-	return string(b), code
+	var response backend.CountResponse
+	require.Nil(t, json.Unmarshal(b, &response))
+
+	return response, code
 }
