@@ -160,18 +160,20 @@ func DeleteAll(itemList *utils.ItemList) httprouter.Handle {
 	})
 }
 
-func getID(ps httprouter.Params) (int, error) {
-	idVar := ps.ByName("id")
-	if idVar == "" {
-		return 0, fmt.Errorf("id url parameter not set (usage: /endpoint/{id})")
-	}
+func Count(itemList *utils.ItemList) httprouter.Handle {
+	return httprouter.Handle(func(writer http.ResponseWriter, request *http.Request, ps httprouter.Params) {
+		count := len(itemList.ReadAll())
+		writer.Write([]byte(fmt.Sprintf("%v", count)))
+	})
+}
 
-	index, err := strconv.Atoi(idVar)
+func getID(ps httprouter.Params) (int, error) {
+	id, err := strconv.Atoi(ps.ByName("id"))
 	if err != nil {
 		return 0, fmt.Errorf("error converting id to number: %v", err)
 	}
 
-	return index, nil
+	return id, nil
 }
 
 func parseRequestBody(request *http.Request) (*rpc.RequestBody, error) {

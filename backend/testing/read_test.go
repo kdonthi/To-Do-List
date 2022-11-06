@@ -25,12 +25,12 @@ func TestPrintItems(t *testing.T) {
 			expectedResponse: "TO-DO LIST\n----------\nLooking kind of empty...\n",
 		},
 		{
-			name:             "one items",
+			name:             "one item",
 			values:           []string{"abc"},
 			expectedResponse: "TO-DO LIST\n----------\n1. abc\n",
 		},
 		{
-			name:             "two items",
+			name:             "multiple items",
 			values:           []string{"abc", "def", "123"},
 			expectedResponse: "TO-DO LIST\n----------\n1. abc\n2. def\n3. 123\n",
 		},
@@ -84,9 +84,10 @@ func TestReadItem_IDValidity(t *testing.T) {
 
 			itemList.CreateItem("hello")
 			itemList.CreateItem("world")
-			_, _, err := readItem(t, router, testCase.id)
+			_, code, err := readItem(t, router, testCase.id)
 
 			assert.Equal(t, testCase.expectedError, err)
+			assert.Equal(t, testCase.expectedCode, code)
 		})
 	}
 }
@@ -103,12 +104,12 @@ func TestReadAll(t *testing.T) {
 			expectedResponse: []utils.ItemAndID{},
 		},
 		{
-			name:             "one items",
+			name:             "one item",
 			values:           []string{"abc"},
 			expectedResponse: []utils.ItemAndID{{ID: 1, Item: "abc"}},
 		},
 		{
-			name:             "two items",
+			name:             "multiple items",
 			values:           []string{"abc", "def", "123"},
 			expectedResponse: []utils.ItemAndID{{ID: 1, Item: "abc"}, {ID: 2, Item: "def"}, {ID: 3, Item: "123"}},
 		},
@@ -124,6 +125,44 @@ func TestReadAll(t *testing.T) {
 
 			resp, code := readItems(t, router)
 			assert.Equal(t, testCase.expectedResponse, resp)
+			assert.Equal(t, 200, code)
+		})
+	}
+}
+
+func TestCount(t *testing.T) {
+	testTable := []struct {
+		name          string
+		values        []string
+		expectedCount string
+	}{
+		{
+			name:          "no items",
+			values:        []string{},
+			expectedCount: "0",
+		},
+		{
+			name:          "one item",
+			values:        []string{"abc"},
+			expectedCount: "1",
+		},
+		{
+			name:          "multiple items",
+			values:        []string{"abc", "def", "123"},
+			expectedCount: "3",
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			router, itemList := setup()
+
+			for _, val := range testCase.values {
+				itemList.CreateItem(val)
+			}
+
+			response, code := count(t, router)
+			assert.Equal(t, testCase.expectedCount, response)
 			assert.Equal(t, 200, code)
 		})
 	}
@@ -155,7 +194,7 @@ func readItem(t *testing.T, router *httprouter.Router, id int) (utils.ItemAndID,
 	var resp utils.ItemAndID
 	err = json.Unmarshal(b, &resp)
 	if err != nil {
-		return utils.ItemAndID{}, 0, fmt.Errorf(string(b))
+		return utils.ItemAndID{}, code, fmt.Errorf(string(b))
 	}
 
 	return resp, code, nil
@@ -175,4 +214,17 @@ func readItems(t *testing.T, router *httprouter.Router) ([]utils.ItemAndID, int)
 	require.Nil(t, json.Unmarshal(b, &resp))
 
 	return resp, code
+}
+
+func count(t *testing.T, router *httprouter.Router) (string, int) {
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/count", nil)
+
+	router.ServeHTTP(w, req)
+	code := w.Code
+
+	b, err := io.ReadAll(w.Body)
+	require.Nil(t, err)
+
+	return string(b), code
 }
