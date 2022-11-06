@@ -55,9 +55,9 @@ func TestUpdateItem_IDValidity(t *testing.T) {
 }
 
 func TestUpdateItem_InvalidBody(t *testing.T) {
-	router, _ := setup()
+	router, itemList := setup()
 
-	createItemValidBody(t, router, "hello")
+	itemList.CreateItem("hello")
 	_, code, err := updateItemInvalidBody(t, router, 1)
 
 	require.NotNil(t, err)
